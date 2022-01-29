@@ -14,6 +14,7 @@ namespace Word_Representation.Preprocess
         string Filepath;
         string[] Lines;
         string[] Clean;
+        string[] Dataset;
 
         public SkipGramDataset(string filepath, string extension = ".txt")
         {
@@ -42,7 +43,7 @@ namespace Word_Representation.Preprocess
 
         }
 
-        public dynamic Prepare(bool asEnumerable, bool token)
+        public dynamic Preprocess(bool asEnumerable, bool token)
         {
             System.Collections.Generic.IEnumerable<string> stripGenerator = CleanText.Strip(corpus: this.Lines, token: token);
             if (asEnumerable)
@@ -54,6 +55,25 @@ namespace Word_Representation.Preprocess
                 this.Clean = stripGenerator.ToArray();
                 return this.Clean;
             }
+        }
+
+        public string[] Prepare()
+        {
+            this.Preprocess(asEnumerable: false, token: false);
+
+            Dictionary<string, int> data = new Dictionary<string, int>();
+
+            foreach (string line in this.Clean)
+            {
+                foreach (string word in line.Split(" ") {
+                    if (data.Contains(word))
+                    {
+
+                    }
+                }
+            }
+
+            return this.Dataset;
         }
     }
 }
