@@ -11,10 +11,14 @@ namespace Word_Representation.Preprocess
     {
         public static string Extension = ".txt";
 
+        int WindowSize;
+
         string Filepath;
         string[] Lines;
         string[] Clean;
-        string[] Dataset;
+
+        List<(string, string[])> Dataset;
+        Dictionary<string, int> Vocabulary = new Dictionary<string, int>();
 
         public SkipGramDataset(string filepath, string extension = ".txt")
         {
@@ -57,19 +61,72 @@ namespace Word_Representation.Preprocess
             }
         }
 
-        public string[] Prepare()
+        public List<(string, string[])> Prepare(int windowSize)
         {
+            this.WindowSize = windowSize;
+
             this.Preprocess(asEnumerable: false, token: false);
 
             Dictionary<string, int> data = new Dictionary<string, int>();
 
             foreach (string line in this.Clean)
             {
-                foreach (string word in line.Split(" ") {
-                    if (data.Contains(word))
-                    {
+                foreach (string word in line.Split(" ")) {
+                    string trim = word.Trim();
 
+                    if (trim != " " && trim != "")
+                    {
+                        if (!data.ContainsKey(trim))
+                        {
+                            data.Add(trim, 1);
+                        }
+                        else
+                        {
+                            data[trim] += 1;
+                        }
                     }
+                }
+            }
+
+            var vocabularySize = data.Count;
+
+            IEnumerable<string> items = from pair in data
+                                        orderby pair.Value ascending
+                                        select pair.Key;
+            
+
+            int index = 0;
+            foreach (string item in items)
+            {
+                this.Vocabulary[item] = index;
+                index++;
+            }
+
+            foreach (string sentence in this.Clean)
+            {
+                var i = 0;
+                string[] splitSentence = sentence.Split(" ");
+                foreach (string word in splitSentence)
+                {
+                    IEnumerable<int> centerWordEnum = from number in Enumerable.Range(0, vocabularySize) select 0;
+                    IEnumerable<int> contextWordsEnum = from number in Enumerable.Range(0, vocabularySize) select 0;
+                    
+                    int[] centerWord = centerWordEnum.ToArray();
+                    int[] contextWords = contextWordsEnum.ToArray();
+
+                    centerWord[this.Vocabulary[word]] = 1;
+
+                    foreach (int j in Enumerable.Range(index-this.WindowSize, index+this.WindowSize))
+                    {
+                        if (i != j && j >= 0 && j < splitSentence.Length)
+                        {
+                            contextWords[this.Vocabulary[splitSentence[j]]] += 1;
+                        }
+                    }
+
+
+
+                    i++;
                 }
             }
 
